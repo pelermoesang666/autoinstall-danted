@@ -56,11 +56,48 @@ echo "peler:peler123" | chpasswd
 systemctl restart danted
 systemctl enable danted
 
-echo ""
-echo "=========================================="
-echo "SOCKS5 Proxy siap"
-echo "IP      : $EXTERNAL_IP"
-echo "Port    : 443"
-echo "User    : peler"
-echo "Password: peler123"
-echo "=========================================="
+apt install -y build-essential gcc make git
+
+rm -rf /tmp/3proxy
+cd /tmp
+git clone https://github.com/3proxy/3proxy.git
+cd 3proxy
+
+make -f Makefile.Linux
+
+sed -i -E '/^[[:space:]]*bin\/\$\(PREFIX\)(ftppr|imapp|pop3p|smtpp)[[:space:]]*\\[[:space:]]*$/d' Makefile.Linux
+
+make -f Makefile.Linux install
+
+mkdir -p /etc/3proxy
+: > /etc/3proxy/3proxy.cfg
+cat > /etc/3proxy/3proxy.cfg <<EOF
+daemon
+pidfile /var/run/3proxy.pid
+nserver 8.8.8.8
+nserver 1.1.1.1
+nscache 65536
+log /var/log/3proxy.log D
+logformat "- +_L%t.%. %N.%p %E %U %C:%c %R:%r %O %I %h %T"
+timeouts 1 5 30 60 180 1800 15 60
+users peler:CL:peler123
+auth strong
+allow peler
+proxy -p8443 -a
+EOF
+
+mkdir -p /etc/systemd/system/3proxy.service.d
+cat > /etc/systemd/system/3proxy.service.d/override.conf <<EOF
+[Service]
+User=root
+Group=root
+Type=forking
+PIDFile=/var/run/3proxy.pid
+EOF
+
+systemctl daemon-reload
+systemctl enable 3proxy
+systemctl restart 3proxy
+
+sleep 2
+ss -tlnp | grep -E '443|8443'
