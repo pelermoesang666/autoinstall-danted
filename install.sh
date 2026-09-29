@@ -51,7 +51,7 @@ EOF
 if ! id peler &>/dev/null; then
     useradd -r -s /bin/false peler
 fi
-echo "peler:peler123" | chpasswd
+echo "peler:Musangking123" | chpasswd
 
 systemctl restart danted
 systemctl enable danted
@@ -80,7 +80,7 @@ nscache 65536
 log /var/log/3proxy.log D
 logformat "- +_L%t.%. %N.%p %E %U %C:%c %R:%r %O %I %h %T"
 timeouts 1 5 30 60 180 1800 15 60
-users peler:CL:peler123
+users peler:CL:Musangking123
 auth strong
 allow peler
 proxy -p8443 -a
